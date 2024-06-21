@@ -1,3 +1,4 @@
+using System;
 using System.Collections;
 using System.Collections.Generic;
 using System.Linq;
@@ -6,14 +7,24 @@ using UnityEngine;
 
 public abstract class Tower : MonoBehaviour
 {
-    public List<GameObject> enemiesInRange;
+    #region Definitions
+
+    public enum TowerTargetPriority{First, Last, Strongest, Weakest}
+
+    [Header("Tower Aspects")]
+    
     public float attackCooldown = 1f; //This value is used to reset timer, should not be adjusted
-    public float attackTimer; 
-    public GameObject curTarget;
+    [NonSerialized] public float attackTimer; 
     public float range;
     public bool towerRotates;
-    public enum TowerTargetPriority{First, Last, Strongest, Weakest}
     public TowerTargetPriority targetPriority;
+    
+    
+    [Header("Testing Variables")]
+    [NonSerialized] public List<GameObject> enemiesInRange;
+    [NonSerialized] public GameObject curTarget;
+
+    #endregion
 
     void Start()
     {
@@ -54,6 +65,7 @@ public abstract class Tower : MonoBehaviour
         transform.rotation = rotation * Quaternion.Euler(0, 0, 180); //This assumes the "front" of the sprite is at the bottom
     }
 
+    #region TriggerEnters
     private void OnTriggerEnter2D (Collider2D other) //Log enemies going in
     //THIS NEEDS A RIGIDBODY AND COLLIDER2D ATTACHED TO OTHER TO WORK
     {
@@ -65,6 +77,7 @@ public abstract class Tower : MonoBehaviour
         enemiesInRange.Remove(other.gameObject);
         if(curTarget == other.gameObject) curTarget = null; //removes out of range enemy
     }
+    #endregion
 
     public GameObject UpdateTarget()
     {
