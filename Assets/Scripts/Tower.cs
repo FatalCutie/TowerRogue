@@ -5,7 +5,7 @@ using System.Linq;
 using Unity.VisualScripting;
 using UnityEngine;
 
-public abstract class Tower : MonoBehaviour
+public class Tower : MonoBehaviour
 {
     #region Definitions
 
@@ -18,11 +18,19 @@ public abstract class Tower : MonoBehaviour
     public float range;
     public bool towerRotates;
     public TowerTargetPriority targetPriority;
+
+    [Header("Tower Set Up")]
+    public Transform firePoint;
+    public GameObject bulletPrefab;
+
+    [Header("Bullet Settings")] //Scriptable object material?
+    public float damage;
+    public float bulletSpeed;
     
     
     [Header("Testing Variables")]
-    [NonSerialized] public List<GameObject> enemiesInRange;
-    [NonSerialized] public GameObject curTarget;
+    [NonSerialized] public List<GameObject> enemiesInRange = new List<GameObject>();
+    [NonSerialized] public GameObject curTarget = null;
 
     #endregion
 
@@ -53,8 +61,18 @@ public abstract class Tower : MonoBehaviour
         attackTimer -= Time.deltaTime;
     }
 
-    public abstract void Attack(); //Towers will attack in their unique way
+    public virtual void Attack() //Towers will attack in their unique way
+    {
+        if (towerRotates) RotateTowardsTarget();
 
+        GameObject proj = Instantiate(bulletPrefab, firePoint.position, Quaternion.identity);
+        proj.GetComponent<Bullet>().Initialize(curTarget, damage, bulletSpeed);
+        //FindObjectOfType<AudioManager>().Play("bigShoot1");
+
+        attackTimer = attackCooldown;
+    } 
+
+    #region Rotation, TriggerEnters
 
     public void RotateTowardsTarget()
     {
@@ -65,17 +83,17 @@ public abstract class Tower : MonoBehaviour
         transform.rotation = rotation * Quaternion.Euler(0, 0, 180); //This assumes the "front" of the sprite is at the bottom
     }
 
-    #region TriggerEnters
     private void OnTriggerEnter2D (Collider2D other) //Log enemies going in
     //THIS NEEDS A RIGIDBODY AND COLLIDER2D ATTACHED TO OTHER TO WORK
     {
-        enemiesInRange.Add(other.gameObject);
+        if(other.CompareTag("Enemy")) enemiesInRange.Add(other.gameObject);
     }
 
     private void OnTriggerExit2D (Collider2D other) //Remove enemies going out
     {
-        enemiesInRange.Remove(other.gameObject);
-        if(curTarget == other.gameObject) curTarget = null; //removes out of range enemy
+        if(other.CompareTag("Enemy"))enemiesInRange.Remove(other.gameObject);
+
+        if(curTarget == other.gameObject) curTarget = null; //reset target
     }
     #endregion
 
